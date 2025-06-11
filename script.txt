@@ -19,6 +19,8 @@ const emptyDotColor = new Color("#444444", 0.6);    // Remaining days
 
 // Layout Configuration
 // These are optimized for iPhone 15 Pro. You may need to adjust for different devices.
+// Layout settings
+// These are optimized for iPhone 15 Pro. You may need to adjust for different devices.
 const WIDGET_WIDTH = 320;         // Base widget width
 const PADDING = 8;               // Space around the edges of the widget
 const CIRCLE_SIZE = 6;           // Size of the progress dots
@@ -32,6 +34,8 @@ const cornerRadius = 18;         // Widget corner radius
 // Calculate grid dimensions
 const AVAILABLE_WIDTH = WIDGET_WIDTH - (2 * PADDING);
 const TOTAL_CIRCLE_WIDTH = CIRCLE_SIZE + CIRCLE_SPACING;
+const COLUMNS = Math.floor(AVAILABLE_WIDTH / TOTAL_CIRCLE_WIDTH);  // Dynamic column calculation
+const ROWS = Math.ceil(365 / COLUMNS);                            // Calculate rows needed
 const COLUMNS = 25;  // Fixed number of columns
 const ROWS = 15;     // Fixed number of rows
 
@@ -70,25 +74,25 @@ const gridContainer = w.addStack();
 gridContainer.layoutVertically();
 
 // Build the dot grid
-let dotIndex = 0;
+const gridStack = gridContainer.addStack();
+gridStack.layoutVertically();
+gridStack.spacing = CIRCLE_SPACING;
+
 for (let row = 0; row < ROWS; row++) {
-    const rowStack = gridContainer.addStack();
+    const rowStack = gridStack.addStack();
     rowStack.layoutHorizontally();
-    rowStack.centerAlignContent();
-    
-    // Add the left shift
     rowStack.addSpacer(DOT_SHIFT_LEFT);
     
     for (let col = 0; col < COLUMNS; col++) {
-        if (dotIndex < 365) {
-            const dot = rowStack.addText("•");
-            dot.font = Font.systemFont(CIRCLE_SIZE);
-            dot.textColor = (dotIndex < streakCount) ? filledDotColor : emptyDotColor;
-            dotIndex++;
-            if (col < COLUMNS - 1) rowStack.addSpacer(CIRCLE_SPACING);
-        }
+        const day = row * COLUMNS + col + 1;
+        if (day > 365) continue;
+        
+        const circle = rowStack.addText("●");
+        circle.font = Font.systemFont(CIRCLE_SIZE);
+        circle.textColor = (day <= streakCount) ? filledDotColor : emptyDotColor;
+        
+        if (col < COLUMNS - 1) rowStack.addSpacer(CIRCLE_SPACING);
     }
-    if (row < ROWS - 1) gridContainer.addSpacer(CIRCLE_SPACING);
 }
 
 w.addSpacer(TEXT_SPACING);
@@ -105,16 +109,20 @@ nameText.font = MENLO_BOLD;
 nameText.textColor = filledDotColor;
 nameText.lineLimit = 1;
 
-const textWidth = `${streakCount} days streak`.length * 7.5;
+// Calculate spacing for streak text
+const streakText = `${streakCount} days streak`;
+const textWidth = streakText.length * 7.5;
 const availableSpace = WIDGET_WIDTH - (PADDING * 2) - YEAR_OFFSET - (nameText.text.length * 7.5);
 const spacerLength = availableSpace - textWidth + DAYS_LEFT_OFFSET;
+
 footer.addSpacer(spacerLength);
 
 // Streak count (right)
-const streakText = footer.addText(`${streakCount} day${streakCount === 1 ? "" : "s"}`);
-streakText.font = MENLO_REGULAR;
-streakText.textColor = new Color("#ffffff", 0.8);
-streakText.lineLimit = 1;
+const streakTextStack = footer.addStack();
+const streakDisplay = streakTextStack.addText(streakText);
+streakDisplay.font = MENLO_REGULAR;
+streakDisplay.textColor = new Color("#ffffff", 0.4);  // Matching the countdown widget's style
+streakDisplay.lineLimit = 1;
 
 // Present widget
 if (config.runsInWidget) {
