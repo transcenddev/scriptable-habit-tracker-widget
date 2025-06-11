@@ -18,26 +18,22 @@ const filledDotColor = new Color("#ffffff");         // Completed days
 const emptyDotColor = new Color("#444444", 0.6);    // Remaining days
 
 // Layout Configuration
-// These are optimized for iPhone 15 Pro. You may need to adjust for different devices.
-// Layout settings
-// These are optimized for iPhone 15 Pro. You may need to adjust for different devices.
-const WIDGET_WIDTH = 320;         // Base widget width
-const PADDING = 8;               // Space around the edges of the widget
-const CIRCLE_SIZE = 6;           // Size of the progress dots
-const CIRCLE_SPACING = 4;        // Space between dots
-const TEXT_SPACING = 8;          // Space between dot grid and text
-const DOT_SHIFT_LEFT = 2;        // Slight left shift for dots
-const YEAR_OFFSET = DOT_SHIFT_LEFT - 2;  // Offset for year text
-const DAYS_LEFT_OFFSET = 0;      // Offset for days left text
-const cornerRadius = 18;         // Widget corner radius
+// Optimized specifically for iPhone XR to prevent overlapping
+const WIDGET_WIDTH = 308;         // Adjusted for XR's screen width
+const PADDING = 16;               // Increased padding to prevent edge overlap
+const CIRCLE_SIZE = 4;            // Smaller dots to fit better
+const CIRCLE_SPACING = 2;         // Reduced spacing between dots
+const TEXT_SPACING = 12;          // Increased spacing between grid and text
+const DOT_SHIFT_LEFT = 1;         // Reduced left shift
+const YEAR_OFFSET = DOT_SHIFT_LEFT - 1;  // Adjusted text offset
+const DAYS_LEFT_OFFSET = 0;       // Kept at 0
+const cornerRadius = 16;          // Slightly reduced corner radius
 
 // Calculate grid dimensions
 const AVAILABLE_WIDTH = WIDGET_WIDTH - (2 * PADDING);
 const TOTAL_CIRCLE_WIDTH = CIRCLE_SIZE + CIRCLE_SPACING;
-const COLUMNS = Math.floor(AVAILABLE_WIDTH / TOTAL_CIRCLE_WIDTH);  // Dynamic column calculation
-const ROWS = Math.ceil(365 / COLUMNS);                            // Calculate rows needed
-const COLUMNS = 25;  // Fixed number of columns
-const ROWS = 15;     // Fixed number of rows
+const COLUMNS = 22;               // Reduced columns for XR width
+const ROWS = 17;                  // Adjusted rows to fit all dots
 
 // Font Configuration
 const MENLO_REGULAR = new Font("Menlo", 12);
