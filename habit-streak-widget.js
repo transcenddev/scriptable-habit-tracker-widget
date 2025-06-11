@@ -1,129 +1,137 @@
-// Pretty Progress Habit Streak Widget for Scriptable
+// Pretty Progress Habit Streak Widget (Enhanced & Modularized)
 
-// ===================================================
+// =======================
 // USER CONFIGURATION
-// ===================================================
+// =======================
+const habit = {
+  name: "Meditation",     // Habit name
+  streak: 57,             // Current streak
+  max: 365                // Total days
+};
 
-// STEP 1: Customize your habit
-const habitName = "Meditation";    // Your habit name
-const streakCount = 57;           // Your current streak (max 365)
+const visual = {
+  bgImageUrl: "",               // Optional background image URL
+  bgColor: "#18181b",           // Solid background color
+  overlayOpacity: 0.95,         // Opacity for dark overlay
 
-// STEP 2: Visual Customization
-const BG_IMAGE_URL = "";          // Add image URL or leave blank
-const BG_COLOR = "#18181b";       // Background/overlay color
-const BG_OVERLAY_OPACITY = 0.95;  // Overlay opacity (0-1)
+  filledDotColor: "#ffffff",    // Color for completed days
+  emptyDotColor: "#444444",     // Color for remaining
+  emptyDotOpacity: 0.6
+};
 
-// Color settings for dots
-const filledDotColor = new Color("#ffffff");         // Completed days
-const emptyDotColor = new Color("#444444", 0.6);    // Remaining days
+const layout = {
+  widgetWidth: 300,      // Best for iPhone XR
+  padding: 20,
+  circleSize: 3,
+  circleSpacing: 1,
+  columns: 20,
+  rows: 19,
+  textSpacing: 15,
+  dotShiftLeft: 0,
+  yearOffset: 0,
+  daysLeftOffset: 0,
+  cornerRadius: 16
+};
 
-// Layout Configuration
-// Optimized specifically for iPhone XR to prevent overlapping
-const WIDGET_WIDTH = 300;         // Further reduced for XR
-const PADDING = 20;               // More padding for safety
-const CIRCLE_SIZE = 3;            // Even smaller dots
-const CIRCLE_SPACING = 1;         // Minimal spacing
-const TEXT_SPACING = 15;          // More space between grid and text
-const DOT_SHIFT_LEFT = 0;         // No left shift needed
-const YEAR_OFFSET = 0;            // No text offset needed
-const DAYS_LEFT_OFFSET = 0;       // Kept at 0
-const cornerRadius = 16;          // Kept the same
+const font = {
+  bold: new Font("Menlo-Bold", 10),
+  regular: new Font("Menlo", 10)
+};
 
-// Calculate grid dimensions
-const AVAILABLE_WIDTH = WIDGET_WIDTH - (2 * PADDING);
-const TOTAL_CIRCLE_WIDTH = CIRCLE_SIZE + CIRCLE_SPACING;
-const COLUMNS = 20;               // Further reduced columns
-const ROWS = 19;                  // Increased rows to compensate
+// =======================
+// INITIALIZE WIDGET
+// =======================
+const w = new ListWidget();
+w.cornerRadius = layout.cornerRadius;
+w.setPadding(layout.padding, layout.padding, layout.padding, layout.padding);
 
-// Font Configuration
-const MENLO_REGULAR = new Font("Menlo", 10);  // Smaller font size
-const MENLO_BOLD = new Font("Menlo-Bold", 10);  // Smaller font size
-
-// Create widget
-let w = new ListWidget();
-w.cornerRadius = cornerRadius;
-
-// Set up background
-if (BG_IMAGE_URL) {
-    try {
-        const req = new Request(BG_IMAGE_URL);
-        const bgImage = await req.loadImage();
-        w.backgroundImage = bgImage;
-    } catch (e) {
-        console.log("Couldn't load background image");
-    }
+// Background
+if (visual.bgImageUrl) {
+  try {
+    const req = new Request(visual.bgImageUrl);
+    const bgImage = await req.loadImage();
+    w.backgroundImage = bgImage;
+  } catch {
+    console.log("Could not load background image.");
+  }
 }
 
-// Add gradient overlay
+// Gradient overlay
 const overlay = new LinearGradient();
 overlay.locations = [0, 1];
 overlay.colors = [
-    new Color(BG_COLOR, BG_OVERLAY_OPACITY),
-    new Color(BG_COLOR, BG_OVERLAY_OPACITY)
+  new Color(visual.bgColor, visual.overlayOpacity),
+  new Color(visual.bgColor, visual.overlayOpacity)
 ];
 w.backgroundGradient = overlay;
 
-w.setPadding(PADDING, PADDING, PADDING, PADDING);
-
-// Create grid container
+// =======================
+// DOT GRID
+// =======================
 const gridContainer = w.addStack();
 gridContainer.layoutVertically();
 
-// Build the dot grid
 const gridStack = gridContainer.addStack();
 gridStack.layoutVertically();
-gridStack.spacing = CIRCLE_SPACING;
+gridStack.spacing = layout.circleSpacing;
 
-for (let row = 0; row < ROWS; row++) {
-    const rowStack = gridStack.addStack();
-    rowStack.layoutHorizontally();
-    rowStack.addSpacer(DOT_SHIFT_LEFT);
-    
-    for (let col = 0; col < COLUMNS; col++) {
-        const day = row * COLUMNS + col + 1;
-        if (day > 365) continue;
-        
-        const circle = rowStack.addText("●");
-        circle.font = Font.systemFont(CIRCLE_SIZE);
-        circle.textColor = (day <= streakCount) ? filledDotColor : emptyDotColor;
-        
-        if (col < COLUMNS - 1) rowStack.addSpacer(CIRCLE_SPACING);
-    }
+for (let row = 0; row < layout.rows; row++) {
+  const rowStack = gridStack.addStack();
+  rowStack.layoutHorizontally();
+  rowStack.addSpacer(layout.dotShiftLeft);
+
+  for (let col = 0; col < layout.columns; col++) {
+    const day = row * layout.columns + col + 1;
+    if (day > habit.max) continue;
+
+    const dot = rowStack.addText("●");
+    dot.font = Font.systemFont(layout.circleSize);
+    dot.textColor = (day <= habit.streak)
+      ? new Color(visual.filledDotColor)
+      : new Color(visual.emptyDotColor, visual.emptyDotOpacity);
+
+    if (col < layout.columns - 1) rowStack.addSpacer(layout.circleSpacing);
+  }
 }
 
-w.addSpacer(TEXT_SPACING);
+w.addSpacer(layout.textSpacing);
 
-// Bottom row with habit name and streak count
+// =======================
+// FOOTER
+// =======================
 const footer = w.addStack();
 footer.layoutHorizontally();
 
 // Habit name (left)
-const eventStack = footer.addStack();
-eventStack.addSpacer(YEAR_OFFSET);
-const nameText = eventStack.addText(habitName);
-nameText.font = MENLO_BOLD;
-nameText.textColor = filledDotColor;
+const habitNameStack = footer.addStack();
+habitNameStack.addSpacer(layout.yearOffset);
+const nameText = habitNameStack.addText(habit.name);
+nameText.font = font.bold;
+nameText.textColor = new Color(visual.filledDotColor);
 nameText.lineLimit = 1;
 
-// Calculate spacing for streak text
-const streakText = `${streakCount} days streak`;
-const textWidth = streakText.length * 7.5;
-const availableSpace = WIDGET_WIDTH - (PADDING * 2) - YEAR_OFFSET - (nameText.text.length * 7.5);
-const spacerLength = availableSpace - textWidth + DAYS_LEFT_OFFSET;
+// Dynamic spacing
+const streakText = `${habit.streak} days streak`;
+const approxCharWidth = 7.5;
+const textWidth = streakText.length * approxCharWidth;
+const availableSpace = layout.widgetWidth - (layout.padding * 2) - layout.yearOffset - (habit.name.length * approxCharWidth);
+const spacerLength = availableSpace - textWidth + layout.daysLeftOffset;
 
 footer.addSpacer(spacerLength);
 
 // Streak count (right)
-const streakTextStack = footer.addStack();
-const streakDisplay = streakTextStack.addText(streakText);
-streakDisplay.font = MENLO_REGULAR;
-streakDisplay.textColor = new Color("#ffffff", 0.4);  // Matching the countdown widget's style
+const streakStack = footer.addStack();
+const streakDisplay = streakStack.addText(streakText);
+streakDisplay.font = font.regular;
+streakDisplay.textColor = new Color("#ffffff", 0.4);
 streakDisplay.lineLimit = 1;
 
-// Present widget
+// =======================
+// RENDER
+// =======================
 if (config.runsInWidget) {
-    Script.setWidget(w);
+  Script.setWidget(w);
 } else {
-    await w.presentMedium();
+  await w.presentMedium();
 }
 Script.complete();
