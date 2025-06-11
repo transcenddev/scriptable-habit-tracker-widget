@@ -18,12 +18,16 @@ const filledDotColor = new Color("#ffffff");         // Completed days
 const emptyDotColor = new Color("#444444", 0.6);    // Remaining days
 
 // Layout Configuration
+// These are optimized for iPhone 15 Pro. You may need to adjust for different devices.
 const WIDGET_WIDTH = 320;         // Base widget width
-const PADDING = 12;               // Edge padding
-const CIRCLE_SIZE = 5;            // Dot size
-const CIRCLE_SPACING = 2;         // Space between dots
-const TEXT_SPACING = 8;           // Space between grid and text
-const cornerRadius = 18;          // Widget corner radius
+const PADDING = 8;               // Space around the edges of the widget
+const CIRCLE_SIZE = 6;           // Size of the progress dots
+const CIRCLE_SPACING = 4;        // Space between dots
+const TEXT_SPACING = 8;          // Space between dot grid and text
+const DOT_SHIFT_LEFT = 2;        // Slight left shift for dots
+const YEAR_OFFSET = DOT_SHIFT_LEFT - 2;  // Offset for year text
+const DAYS_LEFT_OFFSET = 0;      // Offset for days left text
+const cornerRadius = 18;         // Widget corner radius
 
 // Calculate grid dimensions
 const AVAILABLE_WIDTH = WIDGET_WIDTH - (2 * PADDING);
@@ -72,6 +76,9 @@ for (let row = 0; row < ROWS; row++) {
     rowStack.layoutHorizontally();
     rowStack.centerAlignContent();
     
+    // Add the left shift
+    rowStack.addSpacer(DOT_SHIFT_LEFT);
+    
     for (let col = 0; col < COLUMNS; col++) {
         if (dotIndex < 365) {
             const dot = rowStack.addText("•");
@@ -81,7 +88,7 @@ for (let row = 0; row < ROWS; row++) {
             if (col < COLUMNS - 1) rowStack.addSpacer(CIRCLE_SPACING);
         }
     }
-    if (row < ROWS - 1) rowStack.addSpacer(CIRCLE_SPACING);
+    if (row < ROWS - 1) gridContainer.addSpacer(CIRCLE_SPACING);
 }
 
 w.addSpacer(TEXT_SPACING);
@@ -91,12 +98,17 @@ const footer = w.addStack();
 footer.layoutHorizontally();
 
 // Habit name (left)
-const nameText = footer.addText(habitName);
+const eventStack = footer.addStack();
+eventStack.addSpacer(YEAR_OFFSET);
+const nameText = eventStack.addText(habitName);
 nameText.font = MENLO_BOLD;
 nameText.textColor = filledDotColor;
 nameText.lineLimit = 1;
 
-footer.addSpacer();
+const textWidth = `${streakCount} days streak`.length * 7.5;
+const availableSpace = WIDGET_WIDTH - (PADDING * 2) - YEAR_OFFSET - (nameText.text.length * 7.5);
+const spacerLength = availableSpace - textWidth + DAYS_LEFT_OFFSET;
+footer.addSpacer(spacerLength);
 
 // Streak count (right)
 const streakText = footer.addText(`${streakCount} day${streakCount === 1 ? "" : "s"}`);
