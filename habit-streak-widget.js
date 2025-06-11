@@ -24,14 +24,19 @@ const layout = {
   padding: 20,
   circleSize: 3,
   circleSpacing: 1,
-  columns: 20,
-  rows: 19,
   textSpacing: 15,
   dotShiftLeft: 0,
   yearOffset: 0,
   daysLeftOffset: 0,
   cornerRadius: 16
 };
+
+// Calculate grid dimensions
+const totalDays = habit.max;
+const availableWidth = layout.widgetWidth - 2 * layout.padding;
+const totalDotWidth = layout.circleSize + layout.circleSpacing;
+layout.columns = Math.floor(availableWidth / totalDotWidth);
+layout.rows = Math.ceil(totalDays / layout.columns);
 
 const font = {
   bold: new Font("Menlo-Bold", 10),
