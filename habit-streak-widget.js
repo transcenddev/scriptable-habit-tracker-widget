@@ -19,25 +19,25 @@ const emptyDotColor = new Color("#444444", 0.6);    // Remaining days
 
 // Layout Configuration
 // Optimized specifically for iPhone XR to prevent overlapping
-const WIDGET_WIDTH = 308;         // Adjusted for XR's screen width
-const PADDING = 16;               // Increased padding to prevent edge overlap
-const CIRCLE_SIZE = 4;            // Smaller dots to fit better
-const CIRCLE_SPACING = 2;         // Reduced spacing between dots
-const TEXT_SPACING = 12;          // Increased spacing between grid and text
-const DOT_SHIFT_LEFT = 1;         // Reduced left shift
-const YEAR_OFFSET = DOT_SHIFT_LEFT - 1;  // Adjusted text offset
+const WIDGET_WIDTH = 300;         // Further reduced for XR
+const PADDING = 20;               // More padding for safety
+const CIRCLE_SIZE = 3;            // Even smaller dots
+const CIRCLE_SPACING = 1;         // Minimal spacing
+const TEXT_SPACING = 15;          // More space between grid and text
+const DOT_SHIFT_LEFT = 0;         // No left shift needed
+const YEAR_OFFSET = 0;            // No text offset needed
 const DAYS_LEFT_OFFSET = 0;       // Kept at 0
-const cornerRadius = 16;          // Slightly reduced corner radius
+const cornerRadius = 16;          // Kept the same
 
 // Calculate grid dimensions
 const AVAILABLE_WIDTH = WIDGET_WIDTH - (2 * PADDING);
 const TOTAL_CIRCLE_WIDTH = CIRCLE_SIZE + CIRCLE_SPACING;
-const COLUMNS = 22;               // Reduced columns for XR width
-const ROWS = 17;                  // Adjusted rows to fit all dots
+const COLUMNS = 20;               // Further reduced columns
+const ROWS = 19;                  // Increased rows to compensate
 
 // Font Configuration
-const MENLO_REGULAR = new Font("Menlo", 12);
-const MENLO_BOLD = new Font("Menlo-Bold", 12);
+const MENLO_REGULAR = new Font("Menlo", 10);  // Smaller font size
+const MENLO_BOLD = new Font("Menlo-Bold", 10);  // Smaller font size
 
 // Create widget
 let w = new ListWidget();
