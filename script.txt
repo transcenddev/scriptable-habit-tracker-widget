@@ -1,334 +1,76 @@
-// HABIT TRACKER WIDGET by 2049rae (modified for habit tracking)
-// for use in scriptable
-// Addictive streak-based habit tracker inspired by Atomic Habits
+// Pretty Progress Habit Streak Widget for Scriptable
+// Customization Inputs
+const habitName = "Meditation"; // ← Edit your habit name here
+const streakCount = 57;         // ← Edit your streak count here (max 100)
 
-// ===================================================
-// USER CONFIGURATION
-// ===================================================
+// Appearance Settings
+const filledDotColor = Color.white();
+const emptyDotColor = new Color("#444444");
+const bgColor = new Color("#18181b");
+const gridRows = 10;
+const gridCols = 10;
+const dotSizeSmall = 10;
+const dotSizeMedium = 14;
+const dotSpacing = 6;
+const cornerRadius = 18;
 
-// STEP 1: Configure your habits
-// Add or remove habits as needed. Each habit needs a unique key.
-const HABITS = {
-  "sleep": "8h Sleep",
-  "routine": "Morning Routine", 
-  "meditate": "Meditate",
-  "craft": "Personal Craft",
-  "exercise": "Exercise",
-  "evening": "Evening Routine",
-  "diet": "Healthy Diet",
-  "read": "Read",
-  "pray": "Pray",
-  "journal": "Journal"
-};
+// Determine widget size and adjust dot size
+let dotSize = dotSizeSmall;
+if (config.widgetFamily === "medium") dotSize = dotSizeMedium;
 
-// STEP 2: Set how many days to display (recommendation: 30-90 days)
-const DAYS_TO_SHOW = 60;
+// Create widget
+let w = new ListWidget();
+w.backgroundColor = bgColor;
+w.cornerRadius = cornerRadius;
+w.setPadding(18, 18, 18, 18);
 
-// STEP 3: Customize colors for maximum motivation
-const STREAK_COLORS = {
-  0: new Color("#2d2d2d", 0.3),      // Not done (dark gray)
-  1: new Color("#22c55e"),           // Done (bright green) 
-  "future": new Color("#6b7280", 0.2) // Future days (light gray)
-};
+// Centered grid stack
+let gridStack = w.addStack();
+gridStack.layoutVertically();
+gridStack.centerAlignContent();
 
-const TEXT_COLORS = {
-  "primary": new Color("#ffffff"),     // Main text
-  "secondary": new Color("#9ca3af"),   // Secondary text
-  "streak": new Color("#fbbf24"),      // Streak numbers (golden)
-  "success": new Color("#10b981")      // Success indicators
-};
-
-// STEP 4: Background customization
-const BG_IMAGE_URL = ""; // Add your background image URL or leave blank
-const BG_COLOR = "#1f2937";           // Dark background
-const BG_OVERLAY_OPACITY = 0.8;
-
-// STEP 5: Layout settings (optimized for iPhone)
-const PADDING = 12;
-const DOT_SIZE = 4;
-const DOT_SPACING = 3;
-const SECTION_SPACING = 16;
-
-// ===================================================
-// DATA MANAGEMENT
-// ===================================================
-
-// Get stored habit data
-function getHabitData() {
-  const fm = FileManager.iCloud();
-  const path = fm.joinPath(fm.documentsDirectory(), "habit-tracker-data.json");
-  
-  if (fm.fileExists(path)) {
-    const data = fm.readString(path);
-    return JSON.parse(data);
+// Build the 10x10 grid
+let dotIndex = 0;
+for (let row = 0; row < gridRows; row++) {
+  let rowStack = gridStack.addStack();
+  rowStack.layoutHorizontally();
+  rowStack.centerAlignContent();
+  for (let col = 0; col < gridCols; col++) {
+    let dot = rowStack.addText("●");
+    dot.font = Font.systemFont(dotSize);
+    dot.textColor = (dotIndex < streakCount) ? filledDotColor : emptyDotColor;
+    dotIndex++;
+    if (col < gridCols - 1) rowStack.addSpacer(dotSpacing);
   }
-  
-  return {};
+  if (row < gridRows - 1) gridStack.addSpacer(dotSpacing);
 }
 
-// Save habit data
-function saveHabitData(data) {
-  const fm = FileManager.iCloud();
-  const path = fm.joinPath(fm.documentsDirectory(), "habit-tracker-data.json");
-  fm.writeString(path, JSON.stringify(data));
+// Spacer between grid and bottom text
+w.addSpacer(16);
+
+// Bottom row: habit name (left), streak count (right)
+let bottomStack = w.addStack();
+bottomStack.layoutHorizontally();
+
+// Habit name (left)
+let nameText = bottomStack.addText(habitName);
+nameText.font = Font.mediumSystemFont(13);
+nameText.textColor = Color.white();
+nameText.lineLimit = 1;
+
+// Spacer
+bottomStack.addSpacer();
+
+// Streak count (right)
+let streakText = bottomStack.addText(`${streakCount} day${streakCount === 1 ? "" : "s"}`);
+streakText.font = Font.mediumSystemFont(13);
+streakText.textColor = Color.white();
+streakText.lineLimit = 1;
+
+// Show widget
+if (config.runsInWidget) {
+  Script.setWidget(w);
+} else {
+  await w.presentMedium();
 }
-
-// Get date string in YYYY-MM-DD format
-function getDateString(date) {
-  return date.toISOString().split('T')[0];
-}
-
-// Get today's date string
-function getTodayString() {
-  return getDateString(new Date());
-}
-
-// Calculate streak for a habit
-function calculateStreak(habitKey, data) {
-  const today = new Date();
-  let streak = 0;
-  
-  for (let i = 0; i < DAYS_TO_SHOW; i++) {
-    const checkDate = new Date(today);
-    checkDate.setDate(today.getDate() - i);
-    const dateStr = getDateString(checkDate);
-    
-    if (data[dateStr] && data[dateStr][habitKey]) {
-      streak++;
-    } else {
-      break;
-    }
-  }
-  
-  return streak;
-}
-
-// ===================================================
-// WIDGET CREATION
-// ===================================================
-
-async function createWidget() {
-  const widget = new ListWidget();
-  const habitData = getHabitData();
-  
-  // Set background
-  if (BG_IMAGE_URL) {
-    try {
-      const req = new Request(BG_IMAGE_URL);
-      const bgImage = await req.loadImage();
-      widget.backgroundImage = bgImage;
-    } catch (e) {
-      console.log("Couldn't load background image");
-    }
-  }
-  
-  // Add background overlay
-  const overlay = new LinearGradient();
-  overlay.locations = [0, 1];
-  overlay.colors = [
-    new Color(BG_COLOR, BG_OVERLAY_OPACITY),
-    new Color(BG_COLOR, BG_OVERLAY_OPACITY)
-  ];
-  widget.backgroundGradient = overlay;
-  
-  widget.setPadding(PADDING, PADDING, PADDING, PADDING);
-  
-  // Header with motivation
-  const header = widget.addStack();
-  header.layoutHorizontally();
-  
-  const titleStack = header.addStack();
-  const title = titleStack.addText("🔥 HABIT STREAKS");
-  title.font = Font.boldSystemFont(16);
-  title.textColor = TEXT_COLORS.primary;
-  
-  header.addSpacer();
-  
-  const todayText = header.addText(getTodayString());
-  todayText.font = Font.systemFont(12);
-  todayText.textColor = TEXT_COLORS.secondary;
-  
-  widget.addSpacer(SECTION_SPACING);
-  
-  // Calculate streaks and total score
-  let totalScore = 0;
-  const habitStreaks = {};
-  
-  Object.keys(HABITS).forEach(habitKey => {
-    const streak = calculateStreak(habitKey, habitData);
-    habitStreaks[habitKey] = streak;
-    totalScore += streak;
-  });
-  
-  // Show total motivation score
-  const scoreStack = widget.addStack();
-  scoreStack.layoutHorizontally();
-  scoreStack.centerAlignContent();
-  
-  const fireIcon = scoreStack.addText("🚀");
-  fireIcon.font = Font.systemFont(14);
-  
-  scoreStack.addSpacer(4);
-  
-  const scoreText = scoreStack.addText(`Total Streak Power: ${totalScore}`);
-  scoreText.font = Font.boldSystemFont(14);
-  scoreText.textColor = TEXT_COLORS.streak;
-  
-  widget.addSpacer(SECTION_SPACING);
-  
-  // Create habit grid
-  const mainStack = widget.addStack();
-  mainStack.layoutVertically();
-  mainStack.spacing = 8;
-  
-  const today = new Date();
-  
-  Object.entries(HABITS).forEach(([habitKey, habitName], index) => {
-    const habitStack = mainStack.addStack();
-    habitStack.layoutHorizontally();
-    habitStack.centerAlignContent();
-    
-    // Habit name and streak
-    const nameStack = habitStack.addStack();
-    nameStack.layoutVertically();
-    
-    const name = nameStack.addText(habitName);
-    name.font = Font.systemFont(11);
-    name.textColor = TEXT_COLORS.primary;
-    
-    const streak = habitStreaks[habitKey];
-    const streakText = nameStack.addText(`${streak} day${streak !== 1 ? 's' : ''}`);
-    streakText.font = Font.boldSystemFont(9);
-    streakText.textColor = streak > 0 ? TEXT_COLORS.success : TEXT_COLORS.secondary;
-    
-    habitStack.addSpacer(8);
-    
-    // Progress dots (last 14 days)
-    const dotsStack = habitStack.addStack();
-    dotsStack.layoutHorizontally();
-    dotsStack.spacing = DOT_SPACING;
-    
-    for (let i = 13; i >= 0; i--) {
-      const checkDate = new Date(today);
-      checkDate.setDate(today.getDate() - i);
-      const dateStr = getDateString(checkDate);
-      
-      const dot = dotsStack.addText("●");
-      dot.font = Font.systemFont(DOT_SIZE);
-      
-      if (i > 0) {
-        // Past days
-        if (habitData[dateStr] && habitData[dateStr][habitKey]) {
-          dot.textColor = STREAK_COLORS[1]; // Completed
-        } else {
-          dot.textColor = STREAK_COLORS[0]; // Not completed
-        }
-      } else {
-        // Today - check if completed
-        if (habitData[dateStr] && habitData[dateStr][habitKey]) {
-          dot.textColor = STREAK_COLORS[1]; // Completed today
-        } else {
-          dot.textColor = STREAK_COLORS[0]; // Not completed yet today
-        }
-      }
-    }
-    
-    if (index < Object.keys(HABITS).length - 1) {
-      mainStack.addSpacer(4);
-    }
-  });
-  
-  widget.addSpacer(SECTION_SPACING);
-  
-  // Motivational footer
-  const footerStack = widget.addStack();
-  footerStack.layoutHorizontally();
-  footerStack.centerAlignContent();
-  
-  let motivationMessage = "💪 Keep building!";
-  if (totalScore > 50) motivationMessage = "🏆 You're on fire!";
-  else if (totalScore > 20) motivationMessage = "⚡ Great momentum!";
-  else if (totalScore > 5) motivationMessage = "📈 Building habits!";
-  
-  const motivation = footerStack.addText(motivationMessage);
-  motivation.font = Font.systemFont(10);
-  motivation.textColor = TEXT_COLORS.secondary;
-  
-  footerStack.addSpacer();
-  
-  const tapHint = footerStack.addText("Tap to mark today");
-  tapHint.font = Font.systemFont(8);
-  tapHint.textColor = TEXT_COLORS.secondary;
-  
-  return widget;
-}
-
-// ===================================================
-// INTERACTION HANDLING
-// ===================================================
-
-// Handle widget tap - show habit selector
-async function handleWidgetTap() {
-  const alert = new Alert();
-  alert.title = "🎯 Mark Today's Habits";
-  alert.message = "Which habits did you complete today?";
-  
-  const habitData = getHabitData();
-  const todayStr = getTodayString();
-  
-  if (!habitData[todayStr]) {
-    habitData[todayStr] = {};
-  }
-  
-  // Add buttons for each habit
-  Object.entries(HABITS).forEach(([habitKey, habitName]) => {
-    const isCompleted = habitData[todayStr][habitKey] || false;
-    const buttonText = `${isCompleted ? '✅' : '⬜'} ${habitName}`;
-    alert.addAction(buttonText);
-  });
-  
-  alert.addCancelAction("Done");
-  
-  const response = await alert.presentSheet();
-  
-  if (response !== -1) {
-    const habitKeys = Object.keys(HABITS);
-    const selectedHabitKey = habitKeys[response];
-    
-    // Toggle habit completion
-    habitData[todayStr][selectedHabitKey] = !habitData[todayStr][selectedHabitKey];
-    
-    saveHabitData(habitData);
-    
-    // Show success message
-    const successAlert = new Alert();
-    const isNowCompleted = habitData[todayStr][selectedHabitKey];
-    successAlert.title = isNowCompleted ? "🎉 Habit Completed!" : "📝 Habit Updated";
-    successAlert.message = `${HABITS[selectedHabitKey]} ${isNowCompleted ? 'marked as done' : 'unmarked'} for today`;
-    successAlert.addAction("OK");
-    await successAlert.present();
-    
-    // Recursively show selector again
-    await handleWidgetTap();
-  }
-}
-
-// ===================================================
-// MAIN EXECUTION
-// ===================================================
-
-async function main() {
-  const widget = await createWidget();
-  
-  if (config.runsInWidget) {
-    Script.setWidget(widget);
-  } else {
-    // When run in app, show interaction
-    await handleWidgetTap();
-    widget.presentMedium();
-  }
-  
-  Script.complete();
-}
-
-await main();
+Script.complete();
