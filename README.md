@@ -1,40 +1,31 @@
-Habit Streak Widget
-This is a minimal habit streak widget for iOS using Scriptable. It shows your current streak in a clean grid layout with simple customization options.
+# Pretty Progress Habit Streak Widget
 
-How to Use
-Install the Scriptable app on your iOS device.
+This is a minimal habit streak widget for iOS using Scriptable.  
+It displays your current habit streak as a grid of dots, with options for simple customization.
 
-Copy the script code into a new script in Scriptable.
+## How to Use
 
-Customize the habit, visual, and layout settings at the top of the script.
+1. Install the Scriptable app from the iOS App Store.
+2. Create a new script and paste the code from `habit-streak-widget.js`.
+3. Customize the configuration at the top of the script to fit your habit.
+4. Run the script or add it as a medium-sized widget on your home screen.
 
-Run the script or add it as a home screen widget.
+## Configuration
 
-Customization
-You can edit:
+You can adjust the following settings in the script:
 
-habit.name: name of the habit
+- `habit.name`: Name of the habit (e.g., "Meditation")
+- `habit.streak`: Number of days in your current streak
+- `habit.max`: Total number of days to track (e.g., 365)
+- `visual`: Colors, background image, overlay opacity
+- `layout`: Widget size, dot spacing, padding, and other layout settings
 
-habit.streak: current streak count
+Example:
 
-habit.max: total days to track
-
-visual: colors, opacity, optional background image
-
-layout: padding, dot size, spacing, etc.
-
-Example
-js
-Copy
-Edit
+```js
 const habit = {
-name: "Meditation",
-streak: 57,
-max: 365
+  name: "Meditation",
+  streak: 57,
+  max: 365,
 };
-Notes
-You can add a background image using a direct image URL.
-
-Works best in medium widget size.
-
-Designed for clarity, focus, and ease of use.
+```
