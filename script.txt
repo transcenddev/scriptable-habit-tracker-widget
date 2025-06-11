@@ -1,76 +1,113 @@
 // Pretty Progress Habit Streak Widget for Scriptable
-// Customization Inputs
-const habitName = "Meditation"; // ← Edit your habit name here
-const streakCount = 57;         // ← Edit your streak count here (max 100)
 
-// Appearance Settings
-const filledDotColor = Color.white();
-const emptyDotColor = new Color("#444444");
-const bgColor = new Color("#18181b");
-const gridRows = 10;
-const gridCols = 10;
-const dotSizeSmall = 10;
-const dotSizeMedium = 14;
-const dotSpacing = 6;
-const cornerRadius = 18;
+// ===================================================
+// USER CONFIGURATION
+// ===================================================
 
-// Determine widget size and adjust dot size
-let dotSize = dotSizeSmall;
-if (config.widgetFamily === "medium") dotSize = dotSizeMedium;
+// STEP 1: Customize your habit
+const habitName = "Meditation";    // Your habit name
+const streakCount = 57;           // Your current streak (max 365)
+
+// STEP 2: Visual Customization
+const BG_IMAGE_URL = "";          // Add image URL or leave blank
+const BG_COLOR = "#18181b";       // Background/overlay color
+const BG_OVERLAY_OPACITY = 0.95;  // Overlay opacity (0-1)
+
+// Color settings for dots
+const filledDotColor = new Color("#ffffff");         // Completed days
+const emptyDotColor = new Color("#444444", 0.6);    // Remaining days
+
+// Layout Configuration
+const WIDGET_WIDTH = 320;         // Base widget width
+const PADDING = 12;               // Edge padding
+const CIRCLE_SIZE = 5;            // Dot size
+const CIRCLE_SPACING = 2;         // Space between dots
+const TEXT_SPACING = 8;           // Space between grid and text
+const cornerRadius = 18;          // Widget corner radius
+
+// Calculate grid dimensions
+const AVAILABLE_WIDTH = WIDGET_WIDTH - (2 * PADDING);
+const TOTAL_CIRCLE_WIDTH = CIRCLE_SIZE + CIRCLE_SPACING;
+const COLUMNS = 25;  // Fixed number of columns
+const ROWS = 15;     // Fixed number of rows
+
+// Font Configuration
+const MENLO_REGULAR = new Font("Menlo", 12);
+const MENLO_BOLD = new Font("Menlo-Bold", 12);
 
 // Create widget
 let w = new ListWidget();
-w.backgroundColor = bgColor;
 w.cornerRadius = cornerRadius;
-w.setPadding(18, 18, 18, 18);
 
-// Centered grid stack
-let gridStack = w.addStack();
-gridStack.layoutVertically();
-gridStack.centerAlignContent();
-
-// Build the 10x10 grid
-let dotIndex = 0;
-for (let row = 0; row < gridRows; row++) {
-  let rowStack = gridStack.addStack();
-  rowStack.layoutHorizontally();
-  rowStack.centerAlignContent();
-  for (let col = 0; col < gridCols; col++) {
-    let dot = rowStack.addText("●");
-    dot.font = Font.systemFont(dotSize);
-    dot.textColor = (dotIndex < streakCount) ? filledDotColor : emptyDotColor;
-    dotIndex++;
-    if (col < gridCols - 1) rowStack.addSpacer(dotSpacing);
-  }
-  if (row < gridRows - 1) gridStack.addSpacer(dotSpacing);
+// Set up background
+if (BG_IMAGE_URL) {
+    try {
+        const req = new Request(BG_IMAGE_URL);
+        const bgImage = await req.loadImage();
+        w.backgroundImage = bgImage;
+    } catch (e) {
+        console.log("Couldn't load background image");
+    }
 }
 
-// Spacer between grid and bottom text
-w.addSpacer(16);
+// Add gradient overlay
+const overlay = new LinearGradient();
+overlay.locations = [0, 1];
+overlay.colors = [
+    new Color(BG_COLOR, BG_OVERLAY_OPACITY),
+    new Color(BG_COLOR, BG_OVERLAY_OPACITY)
+];
+w.backgroundGradient = overlay;
 
-// Bottom row: habit name (left), streak count (right)
-let bottomStack = w.addStack();
-bottomStack.layoutHorizontally();
+w.setPadding(PADDING, PADDING, PADDING, PADDING);
+
+// Create grid container
+const gridContainer = w.addStack();
+gridContainer.layoutVertically();
+
+// Build the dot grid
+let dotIndex = 0;
+for (let row = 0; row < ROWS; row++) {
+    const rowStack = gridContainer.addStack();
+    rowStack.layoutHorizontally();
+    rowStack.centerAlignContent();
+    
+    for (let col = 0; col < COLUMNS; col++) {
+        if (dotIndex < 365) {
+            const dot = rowStack.addText("•");
+            dot.font = Font.systemFont(CIRCLE_SIZE);
+            dot.textColor = (dotIndex < streakCount) ? filledDotColor : emptyDotColor;
+            dotIndex++;
+            if (col < COLUMNS - 1) rowStack.addSpacer(CIRCLE_SPACING);
+        }
+    }
+    if (row < ROWS - 1) rowStack.addSpacer(CIRCLE_SPACING);
+}
+
+w.addSpacer(TEXT_SPACING);
+
+// Bottom row with habit name and streak count
+const footer = w.addStack();
+footer.layoutHorizontally();
 
 // Habit name (left)
-let nameText = bottomStack.addText(habitName);
-nameText.font = Font.mediumSystemFont(13);
-nameText.textColor = Color.white();
+const nameText = footer.addText(habitName);
+nameText.font = MENLO_BOLD;
+nameText.textColor = filledDotColor;
 nameText.lineLimit = 1;
 
-// Spacer
-bottomStack.addSpacer();
+footer.addSpacer();
 
 // Streak count (right)
-let streakText = bottomStack.addText(`${streakCount} day${streakCount === 1 ? "" : "s"}`);
-streakText.font = Font.mediumSystemFont(13);
-streakText.textColor = Color.white();
+const streakText = footer.addText(`${streakCount} day${streakCount === 1 ? "" : "s"}`);
+streakText.font = MENLO_REGULAR;
+streakText.textColor = new Color("#ffffff", 0.8);
 streakText.lineLimit = 1;
 
-// Show widget
+// Present widget
 if (config.runsInWidget) {
-  Script.setWidget(w);
+    Script.setWidget(w);
 } else {
-  await w.presentMedium();
+    await w.presentMedium();
 }
 Script.complete();
